@@ -32,7 +32,8 @@ class MultiHeadAttention(nn.Module):
         print(X.size())
         return X.transpose(1,2).contiguous().view(self.batch_size,self.sequence_length,self.d_model)
     #method for apply mask for 0 values in the mask
-    def apply_mask(self,X,mask):
+    @staticmethod
+    def apply_mask(X,mask):
         return X.masked_fill(mask==0,-1e9)
 
     def forward(self, q, k ,v, mask=None):
@@ -46,7 +47,7 @@ class MultiHeadAttention(nn.Module):
 
         output = torch.matmul(Query,Key)
         output = output / math.sqrt(self.d_head) #Scale factor
-        if mask!=None:
+        if mask is not None:
             output=self.apply_mask(output,mask)
 
         output=torch.softmax(output,-1)
