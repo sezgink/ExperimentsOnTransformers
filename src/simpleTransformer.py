@@ -3,7 +3,7 @@ import torch.nn as nn
 import math
 
 class MultiHeadAttention(nn.Module):
-    def __init__(self, batch_size, sequnce_length, d_model, h_count) -> None: 
+    def __init__(self, batch_size, sequnce_length, d_model, h_count, dropout=None) -> None: 
         super().__init__()
 
         #Input shape(batch_size,sequence_length,d_model)
@@ -22,6 +22,9 @@ class MultiHeadAttention(nn.Module):
 
         #Output transformation matrix
         self.W_o = nn.Linear(d_model,d_model)
+
+        # Optional dropout layer
+        self.dropout = nn.Dropout(dropout) if dropout else None
     
     #method to seperate tensor
     def separate_tensor(self,X):
@@ -45,12 +48,16 @@ class MultiHeadAttention(nn.Module):
         Key= self.separate_tensor(Key).transpose(-2,-1)
         Value= self.separate_tensor(Value)
 
-        output = torch.matmul(Query,Key)
+        output = torch.matmul(Query,Key) #Score 
         output = output / math.sqrt(self.d_head) #Scale factor
         if mask is not None:
             output=self.apply_mask(output,mask)
 
-        output=torch.softmax(output,-1)
+        output=torch.softmax(output,-1) #Attention
+
+        if self.dropout:
+            output = self.dropout(output) #Dropout if dropout defined for layer
+
         output = torch.matmul(output,Value)
         output = self.concat_tensor(output)
         output = self.W_o(output)
