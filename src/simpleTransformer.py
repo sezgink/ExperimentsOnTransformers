@@ -65,7 +65,7 @@ class MultiHeadAttention(nn.Module):
     
 class AddAndNormalization(nn.Module): #WIP
     def __init__(self,d_model,epsilon=1e-6):
-        super.__init__()
+        super().__init__()
         self.norm = nn.LayerNorm(d_model,eps=epsilon)
 
     def forward(self,r,a):
@@ -75,7 +75,7 @@ class AddAndNormalization(nn.Module): #WIP
     
 class FeedForward(nn.Module):
     def __init__(self,d_ff,d_model,dropout=0.1):
-        super.__init()
+        super().__init()
         self.layer1 = nn.Linear(d_model,d_ff)
         self.layer2 = nn.Linear(d_ff,d_model)
         self.relu = nn.ReLU()
