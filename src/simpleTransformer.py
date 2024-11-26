@@ -63,6 +63,31 @@ class MultiHeadAttention(nn.Module):
         output = self.W_o(output)
         return output
     
+class AddAndNormalization(nn.Module): #WIP
+    def __init__(self,d_model,epsilon=1e-6):
+        super.__init__()
+        self.norm = nn.LayerNorm(d_model,eps=epsilon)
+
+    def forward(self,r,a):
+        #a and r shape (batchCount,seqLength,d_model)
+        output = self.norm(r+a)
+        return output
+    
+class FeedForward(nn.Module):
+    def __init__(self,d_ff,d_model,dropout=0.1):
+        super.__init()
+        self.layer1 = nn.Linear(d_model,d_ff)
+        self.layer2 = nn.Linear(d_ff,d_model)
+        self.relu = nn.ReLU()
+        self.dropout = nn.Dropout(dropout)
+
+    def forward(self,X):
+        X = self.layer1(X)
+        X = self.relu(X)
+        X = self.layer2(X)
+        X = self.dropout(X)
+        return X
+ 
 class PositionalEncoding(nn.Module):
     def __init__(self, d_model, max_length=3000) -> None:
         super().__init__()
@@ -75,14 +100,16 @@ class PositionalEncoding(nn.Module):
         pe[:,1::2] = torch.cos(position * div_term)
 
         pe = pe.unsqueeze(0)  # Shape: (1, max_len, d_model)
-        self.register_buffer('pe', pe)  # Register as buffer to avoid tracking gradients
-        
-        
+        self.register_buffer('pe', pe)  # Register as buffer to avoid tracking gradients 
 
     def forward(self,x):
         # x: (batch_size, seq_len, d_model)
         x = x + self.pe[:, :x.size(1)].to(x.device)
         return x
+    
+#TODO add Embeding
+    
+
 
         
         
