@@ -3,7 +3,7 @@ import torch.nn as nn
 import math
 
 class MultiHeadAttention(nn.Module):
-    def __init__(self, batch_size, sequnce_length, d_model, h_count, dropout=None) -> None: 
+    def __init__(self, d_model, h_count, dropout=None) -> None: 
         super().__init__()
 
         #Input shape(batch_size,sequence_length,d_model)
