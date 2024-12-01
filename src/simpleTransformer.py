@@ -12,8 +12,6 @@ class MultiHeadAttention(nn.Module):
         self.h_count = h_count
         assert d_model % h_count == 0
         self.d_head = d_model // h_count
-        self.sequence_length = sequnce_length
-        self.batch_size = batch_size
 
         #Key, Query and Value matrices
         self.W_q = nn.Linear(d_model,d_model)
@@ -28,12 +26,14 @@ class MultiHeadAttention(nn.Module):
     
     #method to seperate tensor
     def separate_tensor(self,X):
-        print(X.size())
-        return X.view(self.batch_size,self.sequence_length,self.h_count,self.d_head).transpose(1,2)
+        print(X.size()) #(batch_size,seq_length,d_model)
+        batch_size, seq_length, _ = X.size()
+        return X.view(batch_size,seq_length,self.h_count,self.d_head).transpose(1,2)
     #method to concat tensors
     def concat_tensor(self,X):
         print(X.size())
-        return X.transpose(1,2).contiguous().view(self.batch_size,self.sequence_length,self.d_model)
+        batch_size, _,seq_length, _ = X.size()
+        return X.transpose(1,2).contiguous().view( batch_size,seq_length,self.d_model)
     #method for apply mask for 0 values in the mask
     @staticmethod
     def apply_mask(X,mask):
@@ -76,8 +76,6 @@ class PositionalEncoding(nn.Module):
 
         pe = pe.unsqueeze(0)  # Shape: (1, max_len, d_model)
         self.register_buffer('pe', pe)  # Register as buffer to avoid tracking gradients
-        
-        
 
     def forward(self,x):
         # x: (batch_size, seq_len, d_model)
