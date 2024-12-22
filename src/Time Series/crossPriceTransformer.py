@@ -76,7 +76,7 @@ class CrossPriceTransformer(nn.Module):
         # x shape: (batch_size, seq_len, input_dim)
         
         # 1. Project input features to d_model dimension
-        x = self.input_projection(x)  # (batch_size, seq_len, d_model)
+        x = self.input_embedding(x)  # (batch_size, seq_len, d_model)
         
         # 2. Add positional encoding
         x = self.positional_encoding(x)  # (batch_size, seq_len, d_model)
