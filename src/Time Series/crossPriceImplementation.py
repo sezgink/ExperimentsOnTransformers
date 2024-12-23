@@ -235,7 +235,7 @@ checkpoint_dir = 'checkpoints'
 os.makedirs(checkpoint_dir, exist_ok=True)
 
 best_val_loss = float('inf')
-best_model_path = os.path.join(checkpoint_dir, f'best_model{datetime.datetime.now()}.pth')
+best_model_path = os.path.join(checkpoint_dir, f'best_model{datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.pth')
 
 ## Start training
 
@@ -244,8 +244,7 @@ for epoch in range(num_epochs):
     val_loss = validate_model(model, val_loader, criterion, device)
     print(f"Epoch {epoch+1}/{num_epochs}, Train Loss: {train_loss:.6f}, Val Loss: {val_loss:.6f}")
 
-    # Save the model and optimizer state_dict if its better
-
+    # Save the model and optimizer state_dict if its validation loss is better
     if val_loss>best_val_loss:
         continue
     
