@@ -17,6 +17,9 @@ print("Step1")
 dataAdress = "../../topsecret/cumulative_data.parquet" #default data adress if data adress not given as command line argument
 if len(sys.argv)>1:
     dataAdress = sys.argv[1]
+existing_cp = None
+if len(sys.argv)>2:
+    existing_cp = sys.argv[2]
 
 df = pd.read_parquet(dataAdress)
 
@@ -57,7 +60,7 @@ scaler = StandardScaler()
 scaled_features = scaler.fit_transform(features)
 
 # Save the scaler to a file
-joblib.dump(scaler, 'scaler.pkl')
+joblib.dump(scaler, 'checkpoints/scaler.pkl')
 
 # Convert back to DataFrame for easier handling
 scaled_df = pd.DataFrame(scaled_features, index=df.index, columns=feature_columns)
@@ -237,9 +240,18 @@ os.makedirs(checkpoint_dir, exist_ok=True)
 best_val_loss = float('inf')
 best_model_path = os.path.join(checkpoint_dir, f'best_model{datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.pth')
 
+##Activate for load
+if existing_cp is not None:
+    checkpoint = torch.load(existing_cp, weights_only=True)
+    model.load_state_dict(checkpoint['model_state_dict'])
+    optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+    recent_epoch = checkpoint['epoch']
+    best_val_loss = checkpoint['val_loss']
+
 ## Start training
 
-for epoch in range(num_epochs):
+# for epoch in range(num_epochs):
+for epoch in range(recent_epoch,num_epochs):
     train_loss = train_model(model, train_loader, optimizer, criterion, device)
     val_loss = validate_model(model, val_loader, criterion, device)
     print(f"Epoch {epoch+1}/{num_epochs}, Train Loss: {train_loss:.6f}, Val Loss: {val_loss:.6f}")
