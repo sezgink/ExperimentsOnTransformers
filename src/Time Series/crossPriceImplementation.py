@@ -256,3 +256,4 @@ for epoch in range(num_epochs):
         'val_loss': val_loss,
     }, best_model_path)
     print(f"Checkpoint saved at {best_model_path}")
+    best_val_loss = val_loss
