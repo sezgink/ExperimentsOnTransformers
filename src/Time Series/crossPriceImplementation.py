@@ -9,7 +9,8 @@ from sklearn.preprocessing import StandardScaler
 import joblib
 from MultiMetricPriceDataset import MultiMetricPriceDataset
 import numpy as np
-
+import os
+import datetime
 ##Data importing
 print("Step1")
 
@@ -229,7 +230,30 @@ print("Before training")
 
 # print("Before training 2")
 
+# Directory to save checkpoints
+checkpoint_dir = 'checkpoints'
+os.makedirs(checkpoint_dir, exist_ok=True)
+
+best_val_loss = float('inf')
+best_model_path = os.path.join(checkpoint_dir, f'best_model{datetime.datetime.now()}.pth')
+
+## Start training
+
 for epoch in range(num_epochs):
     train_loss = train_model(model, train_loader, optimizer, criterion, device)
     val_loss = validate_model(model, val_loader, criterion, device)
     print(f"Epoch {epoch+1}/{num_epochs}, Train Loss: {train_loss:.6f}, Val Loss: {val_loss:.6f}")
+
+    # Save the model and optimizer state_dict if its better
+
+    if val_loss>best_val_loss:
+        continue
+    
+    torch.save({
+        'epoch': epoch + 1,
+        'model_state_dict': model.state_dict(),
+        'optimizer_state_dict': optimizer.state_dict(),
+        'train_loss': train_loss,
+        'val_loss': val_loss,
+    }, best_model_path)
+    print(f"Checkpoint saved at {best_model_path}")
