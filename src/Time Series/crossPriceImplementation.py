@@ -86,13 +86,17 @@ TARGET_COLUMN = 'binance_btcusdt_Close'  # Example target
 # dataset = MultiMetricPriceDataset(scaled_df, seq_length=SEQ_LENGTH, target_column=TARGET_COLUMN)
 # metas=["binance_btcusdt","binance_ethusdt","binance_solusdt","coinbase_btcusd"]
 metas=["binance_btcusdt","binance_ethusdt","binance_solusdt"]
-dataset = MultiMetricPriceDataset(scaled_df, seq_length=SEQ_LENGTH, future_seq_len=2, metas=metas )
+# dataset = MultiMetricPriceDataset(scaled_df, seq_length=SEQ_LENGTH, future_seq_len=2, metas=metas )
+dataset = MultiMetricPriceDataset(scaled_df, seq_length=SEQ_LENGTH, future_seq_len=2, metas=metas, calculate_rsi=True, add_daytime_encoding=True )
 
 sample_data = dataset[1]
 print("Sample Data 1")
 print(sample_data)
 
-print("Shape",dataset[0][1].shape)
+# print("Shape [0]",dataset[0].shape)
+print("Shape Input shape [0][0]",dataset[0][0].shape)
+print("Shape Output shape[0][1]",dataset[0][1].shape)
+inputShape = dataset[0][0].shape
 
 print("Last sample",dataset[-1])
 
@@ -127,7 +131,9 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"Using device: {device}")
 
 # Initialize the model
-input_dim = 16*5
+# input_dim = 16*5
+input_dim = inputShape[1] #dynamic input dim
+print("Input dim is: ",input_dim)
 # target_dim = len(metas) * 4  # Number of target features
 target_dim = len(metas) * 3  # Number of target features
 # future_len = 2
