@@ -61,6 +61,10 @@ class MultiMetricPriceDataset(Dataset):
         for meta in metas2calculate:
             self.data[f'{meta}_RSI_HOURLY'] = self.RSI_From_Data(hourly_resampled[f'{meta}_Close'])
             self.data[f'{meta}_RSI_DAILY'] = self.RSI_From_Data(daily_resampled[f'{meta}_Close'])
+
+            self.data[f'{meta}_RSI_HOURLY'] = self.data[f'{meta}_RSI_HOURLY'].fillna(method='ffill')
+            self.data[f'{meta}_RSI_DAILY'] = self.data[f'{meta}_RSI_DAILY'].fillna(method='ffill')
+
         valid_indices = self.data[f'{metas2calculate[0]}_RSI_DAILY'].dropna().index
         self.data = self.data.loc[valid_indices]
 
