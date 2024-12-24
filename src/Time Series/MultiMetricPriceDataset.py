@@ -89,15 +89,15 @@ class MultiMetricPriceDataset(Dataset):
             # Extract the rolling windows for future sequences
             high_values = self.data[high_col].rolling(window=self.future_seq_len).max().shift(-self.future_seq_len + 1)
             low_values = self.data[low_col].rolling(window=self.future_seq_len).min().shift(-self.future_seq_len + 1)
-            # close_future_values = self.data[close_col].shift(-self.seq_length - self.future_seq_len + 1)
             close_first_values = self.data[close_col].shift(-self.seq_length)
+            # close_future_values = self.data[close_col].shift(-self.seq_length - self.future_seq_len + 1)
+
 
             # Limit to valid indices
             high_values = high_values.iloc[self.seq_length:self.seq_length + num_samples]
             low_values = low_values.iloc[self.seq_length:self.seq_length + num_samples]
-            # close_future_values = close_future_values.iloc[self.seq_length:self.seq_length + num_samples]
-            # close_first_values = close_first_values.iloc[self.seq_length:self.seq_length + num_samples]
             close_first_values = close_first_values.iloc[:num_samples]
+            # close_future_values = close_future_values.iloc[:num_samples]
 
             # Add targets for this meta to the target array
             targets[:, i * 3] = high_values.values
