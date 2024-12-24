@@ -239,7 +239,7 @@ os.makedirs(checkpoint_dir, exist_ok=True)
 
 best_val_loss = float('inf')
 best_model_path = os.path.join(checkpoint_dir, f'best_model{datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.pth')
-
+recent_epoch = 0
 ##Activate for load
 if existing_cp is not None:
     checkpoint = torch.load(existing_cp, weights_only=True)
