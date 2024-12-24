@@ -1,8 +1,10 @@
 import torch
 from torch.utils.data import Dataset
 import numpy as np
+from pandas import DataFrame
 class MultiMetricPriceDataset(Dataset):
-    def __init__(self, data, seq_length, future_seq_len, metas):
+
+    def __init__(self, data : DataFrame, seq_length : int, future_seq_len : int, metas,calculate_rsi=False,add_daytime_encoding=False):
         """
         Args:
             data (DataFrame): The preprocessed and scaled data.
@@ -15,6 +17,7 @@ class MultiMetricPriceDataset(Dataset):
         self.data = data
         self.metas = metas
         self.num_metas = len(metas)
+
         
         # Precompute target indices for efficiency
         self.target_columns = []
@@ -27,42 +30,52 @@ class MultiMetricPriceDataset(Dataset):
         self.target_idxs = [data.columns.get_loc(col) for col in self.target_columns]
         
         # Precompute the targets
-        # self.targets = self._compute_targets()
         self.targets = self._compute_targets_vectorized()
-        
-    def _compute_targets(self):
-        """
-        Computes the targets for each sample in the dataset.
-        
-        Returns:
-            numpy.ndarray: Array of targets with shape (num_samples, num_metas * 3)
-        """
-        num_samples = len(self.data) - self.seq_length - self.future_seq_len + 1
-        targets = []
-        
-        for idx in range(num_samples):
-            target = []
-            for meta in self.metas:
-                # Define the window for the next 'future_seq_len' minutes
-                future_window = self.data.iloc[idx + self.seq_length : idx + self.seq_length + self.future_seq_len]
-                
-                # Calculate highest high
-                max_high = future_window[f'{meta}_High'].max()
-                
-                # Calculate lowest low
-                min_low = future_window[f'{meta}_Low'].min()
-                
-                # Get close price at the future_seq_len-th minute
-                close_future = future_window[f'{meta}_Close'].iloc[-1]
 
-                #Get close price at the end of first minute 
-                close_first = future_window[f'{meta}_Close'].iloc[0]
-                
-                target.extend([max_high, min_low,close_first, close_future])
-            
-            targets.append(target)
+        if add_daytime_encoding:
+            self._add_daytime_encoding()
+
+        if calculate_rsi:
+            metas2calculate = ["binance_btcusdt"]
+            self._calculate_RSI(metas2calculate)
+
+    @staticmethod
+    def RSI_From_Data(df : DataFrame,window_size=14):
+        # Step 3: Separate positive and negative changes
+        diffs = df.diff()
+        gains = diffs.clip(lower=0)  # Positive changes
+        losses = -diffs.clip(upper=0)  # Negative changes (inverted sign)
+
+        avg_gain = gains.rolling(window=window_size, min_periods=window_size).mean()
+        avg_loss = losses.rolling(window=window_size, min_periods=window_size).mean()
+
+        #Calculate RS and RSI
+        rs = avg_gain / avg_loss
+        rsi = 100 - (100 / (1 + rs))
+
+        return rsi
         
-        return torch.tensor(targets, dtype=torch.float32)
+    def _calculate_RSI(self,metas2calculate):
+        hourly_resampled = self.data.resample('H').last()
+        daily_resampled = self.data.resample('D').last()
+        for meta in metas2calculate:
+            self.data[f'{meta}_RSI_HOURLY'] = self.RSI_From_Data(hourly_resampled[f'{meta}_Close'])
+            self.data[f'{meta}_RSI_DAILY'] = self.RSI_From_Data(daily_resampled[f'{meta}_Close'])
+        valid_indices = self.data[f'{metas2calculate[0]}_RSI_DAILY'].dropna().index
+        self.data = self.data.loc[valid_indices]
+
+    def _add_daytime_encoding(self):
+
+        hour = self.data.index.hour
+        minute = self.data.index.minute + hour*60
+
+        # Normalize the minutes to the range [0, 2π]
+        normalized_minutes = (minute / (24 * 60)) * 2 * np.pi
+        
+        # Add sine and cosine of the normalized time as new columns
+        self.data['minute_cos'] = np.cos(normalized_minutes)
+        self.data['minute_sin'] = np.sin(normalized_minutes)
+            
     
     def _compute_targets_vectorized(self):
         """
