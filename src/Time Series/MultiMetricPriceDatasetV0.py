@@ -121,13 +121,13 @@ class MultiMetricPriceDataset(Dataset):
         x = self.data.iloc[idx : idx + self.seq_length].values
         x = torch.tensor(x, dtype=torch.float32)
 
-        if np.isnan(x).any() or np.isinf(x).any():
-            print("NaN or Inf in X_batch at index", idx)
+        # if np.isnan(x).any() or np.isinf(x).any():
+        #     print("NaN or Inf in X_batch at index", idx)
         
         # Target: precomputed targets
         y = self.targets[idx]
-        if torch.isnan(y).any() or torch.isinf(y).any():
-            print("NaN or Inf in Y_batch at index", idx)    
+        # if torch.isnan(y).any() or torch.isinf(y).any():
+        #     print("NaN or Inf in Y_batch at index", idx)    
         y = y.unsqueeze(0)
 
 
