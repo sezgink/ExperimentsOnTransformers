@@ -116,6 +116,7 @@ print(sample_data)
 
 # Create DataLoaders
 BATCH_SIZE = 64
+# BATCH_SIZE = 128
 
 print("Step5")
 
@@ -146,19 +147,34 @@ print("Target dim is",target_dim)
 
 model = CrossPriceTransformer(
     input_dim=input_dim, 
-    d_model=128, 
+    d_model=256, 
     n_heads=8, 
-    num_encoder_layers=4, 
-    dim_feedforward=256,
+    num_encoder_layers=5, 
+    dim_feedforward=512,
     dropout=0.1,
     future_seq_len=future_len, 
     target_dim=target_dim
 ).to(device)
+# model = CrossPriceTransformer(
+#     input_dim=input_dim, 
+#     d_model=128, 
+#     n_heads=8, 
+#     num_encoder_layers=4, 
+#     dim_feedforward=256,
+#     dropout=0.1,
+#     future_seq_len=future_len, 
+#     target_dim=target_dim
+# ).to(device)
 
 
 # Define loss and optimizer
 criterion = nn.MSELoss()
-optimizer = optim.Adam(model.parameters(), lr=1e-3)
+# mae_loss = nn.L1Loss() #Mean average error
+# criterion = mae_loss
+
+# optimizer = optim.Adam(model.parameters(), lr=1e-3)
+optimizer = optim.Adam(model.parameters(), lr=1e-4)
+# optimizer = optim.Adam(model.parameters(), lr=1e-5)
 
 # Training and Validation Functions
 def train_model(model, dataloader, optimizer, criterion, device):
@@ -215,7 +231,7 @@ def validate_model(model, dataloader, criterion, device):
     return total_loss / len(dataloader.dataset)
 
 # Training Loop
-num_epochs = 20  # Adjust based on your requirements
+num_epochs = 100  # Adjust based on your requirements
 
 print("Before training")
 
@@ -253,6 +269,13 @@ if existing_cp is not None:
     optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
     recent_epoch = checkpoint['epoch']
     best_val_loss = checkpoint['val_loss']
+
+for param_group in optimizer.param_groups:
+    param_group['lr'] = 1e-6
+    # param_group['lr'] = 6e-6
+    # param_group['lr'] = 8e-6
+    # param_group['lr'] = 1e-5
+
 
 ## Start training
 
