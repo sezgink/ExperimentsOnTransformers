@@ -6,6 +6,7 @@ import torch
 import sys
 import pandas as pd
 from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import MinMaxScaler
 import joblib
 from MultiMetricPriceDataset import MultiMetricPriceDataset
 import numpy as np
@@ -51,7 +52,8 @@ feature_columns = df.columns.tolist()
 features = df[feature_columns]
 
 # Initialize scaler
-scaler = StandardScaler()
+# scaler = StandardScaler()
+scaler = MinMaxScaler()
 
 # to load the scaler
 # scaler = joblib.load('scaler.pkl')
@@ -147,10 +149,10 @@ print("Target dim is",target_dim)
 
 model = CrossPriceTransformer(
     input_dim=input_dim, 
-    d_model=256, 
-    n_heads=8, 
+    d_model=512, 
+    n_heads=16, 
     num_encoder_layers=5, 
-    dim_feedforward=512,
+    dim_feedforward=2048,
     dropout=0.1,
     future_seq_len=future_len, 
     target_dim=target_dim
@@ -270,8 +272,9 @@ if existing_cp is not None:
     recent_epoch = checkpoint['epoch']
     best_val_loss = checkpoint['val_loss']
 
-for param_group in optimizer.param_groups:
-    param_group['lr'] = 1e-6
+# for param_group in optimizer.param_groups:
+#     param_group['lr'] = 5e-7
+    # param_group['lr'] = 1e-6
     # param_group['lr'] = 6e-6
     # param_group['lr'] = 8e-6
     # param_group['lr'] = 1e-5

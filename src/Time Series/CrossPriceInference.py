@@ -6,6 +6,7 @@ from CollectRTMetaData import PrepeareRTData
 import time
 import pandas as pd
 from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import MinMaxScaler
 import joblib
 import numpy as np
 ##Model implementation
@@ -29,10 +30,10 @@ future_len = 1
 
 model = CrossPriceTransformer(
     input_dim=input_dim, 
-    d_model=256, 
-    n_heads=8, 
+    d_model=512, 
+    n_heads=16, 
     num_encoder_layers=5, 
-    dim_feedforward=512,
+    dim_feedforward=2048,
     dropout=0.1,
     future_seq_len=future_len, 
     target_dim=target_dim
@@ -59,14 +60,16 @@ is_calculating=True
 model.eval()
 
 # Initialize scaler
-scaler = StandardScaler()
+# scaler = StandardScaler()
+scaler = MinMaxScaler()
 
 scaler_adr = "scaler.pkl"
 if len(sys.argv)>2:
     scaler_adr = sys.argv[2]
 
 # to load the scaler
-scaler : StandardScaler = joblib.load(scaler_adr)
+# scaler : StandardScaler = joblib.load(scaler_adr)
+scaler : MinMaxScaler = joblib.load(scaler_adr)
 
 last_pred = None
 while is_calculating:
@@ -114,9 +117,8 @@ while is_calculating:
     print(pred)
     columns2reverse = [1,2,3]
 
-    mean = scaler.mean_
-    scale = scaler.scale_
-    variance = scaler.var_
+    scaler_min = scaler.data_min_[columns2reverse]
+    scaler_max = scaler.data_max_[columns2reverse]
     
     # pred_subset = pred[[0,1,2]]
     # print(f"Shape of pred: {pred.shape}")
@@ -126,7 +128,7 @@ while is_calculating:
     print(f"Shape of pred_subset: {pred_subset.shape}")
 
     # Perform the scaling reversal
-    reversed_subset = (pred_subset * scale[columns2reverse]) + mean[columns2reverse]
+    reversed_subset = (pred_subset * (scaler_max-scaler_min)) + scaler_min
     print(f"Reversed subset: {reversed_subset}")
     if last_pred is not None:
         print(last_pred)
